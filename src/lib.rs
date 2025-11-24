@@ -21,19 +21,3 @@ pub use inline_dedup::CMinHashDeduplicator;
 pub use inline_dedup::RMinHashDeduplicator;
 pub use lsh::RMinHashLSH;
 pub use rminhash::RMinHash;
-
-use pyo3::prelude::*;
-
-/// Python module for `MinHash` and LSH implementations
-///
-/// # Errors
-/// Returns an error if the module initialization fails or classes cannot be added
-#[pymodule]
-pub fn rensa(m: &Bound<'_, PyModule>) -> PyResult<()> {
-  m.add_class::<RMinHash>()?;
-  m.add_class::<CMinHash>()?;
-  m.add_class::<RMinHashLSH>()?;
-  m.add_class::<RMinHashDeduplicator>()?;
-  m.add_class::<CMinHashDeduplicator>()?;
-  Ok(())
-}

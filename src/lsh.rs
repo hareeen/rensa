@@ -35,8 +35,6 @@
 
 use crate::rminhash::RMinHash;
 use crate::utils::calculate_band_hash;
-use pyo3::prelude::*;
-use pyo3::types::PyBytes;
 use rustc_hash::FxHasher;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -44,7 +42,6 @@ use std::hash::BuildHasherDefault;
 
 /// `RMinHashLSH` implements Locality-Sensitive Hashing using `MinHash` for efficient similarity search.
 #[derive(Serialize, Deserialize)]
-#[pyclass(module = "rensa")]
 pub struct RMinHashLSH {
   threshold: f64,
   num_perm: usize,
@@ -53,7 +50,6 @@ pub struct RMinHashLSH {
   hash_tables: Vec<HashMap<u64, Vec<usize>, BuildHasherDefault<FxHasher>>>,
 }
 
-#[pymethods]
 impl RMinHashLSH {
   /// Creates a new `RMinHashLSH` instance.
   ///
@@ -62,7 +58,6 @@ impl RMinHashLSH {
   /// * `threshold` - The similarity threshold for considering items as similar.
   /// * `num_perm` - The number of permutations used in the `MinHash` algorithm.
   /// * `num_bands` - The number of bands for the LSH algorithm.
-  #[new]
   #[must_use]
   pub fn new(threshold: f64, num_perm: usize, num_bands: usize) -> Self {
     let hasher = BuildHasherDefault::<FxHasher>::default();
@@ -172,26 +167,5 @@ impl RMinHashLSH {
   #[must_use]
   pub const fn get_num_bands(&self) -> usize {
     self.num_bands
-  }
-
-  fn __setstate__(&mut self, state: &Bound<'_, PyBytes>) {
-    *self = bincode::serde::decode_from_slice(
-      state.as_bytes(),
-      bincode::config::standard(),
-    )
-    .unwrap()
-    .0;
-  }
-
-  fn __getstate__<'py>(&self, py: Python<'py>) -> Bound<'py, PyBytes> {
-    PyBytes::new(
-      py,
-      &bincode::serde::encode_to_vec(self, bincode::config::standard())
-        .unwrap(),
-    )
-  }
-
-  const fn __getnewargs__(&self) -> (f64, usize, usize) {
-    (self.threshold, self.num_perm, self.num_bands)
   }
 }

@@ -21,7 +21,6 @@ name = "rensa"
 crate-type = ["rlib", "cdylib"]
 
 [dependencies]
-pyo3 = "0.25.0"
 rand = "0.9.0"
 rustc-hash = "2.1.1"
 bincode = { version = "2.0.1", features = ["serde"] }

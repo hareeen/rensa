@@ -27,8 +27,6 @@
 //! - Estimate Jaccard similarity with `rminhash.jaccard(&other_rminhash)`.
 
 use crate::utils::{calculate_hash_fast, permute_hash};
-use pyo3::prelude::*;
-use pyo3::types::{PyBytes, PyIterator};
 use rand::prelude::*;
 use rand_xoshiro::Xoshiro256PlusPlus;
 use serde::{Deserialize, Serialize};
@@ -37,7 +35,6 @@ const PERM_CHUNK_SIZE: usize = 16;
 
 /// `RMinHash` implements the `MinHash` algorithm for efficient similarity estimation.
 #[derive(Serialize, Deserialize, Clone)]
-#[pyclass(module = "rensa")]
 pub struct RMinHash {
   num_perm: usize,
   seed: u64,
@@ -101,7 +98,6 @@ impl RMinHash {
   }
 }
 
-#[pymethods]
 impl RMinHash {
   /// Creates a new `RMinHash` instance.
   ///
@@ -109,7 +105,6 @@ impl RMinHash {
   ///
   /// * `num_perm` - The number of permutations to use in the `MinHash` algorithm.
   /// * `seed` - A seed value for the random number generator.
-  #[new]
   #[must_use]
   pub fn new(num_perm: usize, seed: u64) -> Self {
     let mut rng = Xoshiro256PlusPlus::seed_from_u64(seed);
@@ -128,28 +123,6 @@ impl RMinHash {
       hash_values: vec![u32::MAX; num_perm],
       permutations,
     }
-  }
-
-  /// Updates the `MinHash` with a new set of items.
-  ///
-  /// # Arguments
-  ///
-  /// * `items` - An iterable of strings to be hashed and incorporated into the `MinHash`.
-  ///
-  /// # Errors
-  ///
-  /// Returns an error if `items` is not iterable or contains non-string elements.
-  #[pyo3(signature = (items))]
-  pub fn update(&mut self, items: Bound<'_, PyAny>) -> PyResult<()> {
-    let iterator = PyIterator::from_object(&items)?;
-    let mut collected_items = Vec::new();
-
-    for item in iterator {
-      collected_items.push(item?.extract::<String>()?);
-    }
-
-    self.update_internal(collected_items);
-    Ok(())
   }
 
   /// Returns the current `MinHash` digest.
@@ -202,34 +175,5 @@ impl RMinHash {
     }
 
     equal_count as f64 / self.num_perm as f64
-  }
-
-  fn __setstate__(&mut self, state: &Bound<'_, PyBytes>) {
-    *self = bincode::serde::decode_from_slice(
-      state.as_bytes(),
-      bincode::config::standard(),
-    )
-    .unwrap()
-    .0;
-  }
-
-  fn __getstate__<'py>(&self, py: Python<'py>) -> Bound<'py, PyBytes> {
-    PyBytes::new(
-      py,
-      &bincode::serde::encode_to_vec(self, bincode::config::standard())
-        .unwrap(),
-    )
-  }
-
-  const fn __getnewargs__(&self) -> (usize, u64) {
-    (self.num_perm, self.seed)
-  }
-
-  fn __reduce__(&self) -> PyResult<(PyObject, (usize, u64), PyObject)> {
-    Python::with_gil(|py| {
-      let type_obj = py.get_type::<Self>().into();
-      let state = self.__getstate__(py).into();
-      Ok((type_obj, (self.num_perm, self.seed), state))
-    })
   }
 }

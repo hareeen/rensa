@@ -6,10 +6,8 @@
 use crate::cminhash::CMinHash;
 use crate::lsh::RMinHashLSH;
 use crate::rminhash::RMinHash;
-use pyo3::prelude::*;
 use rustc_hash::FxHashMap;
 
-#[pyclass(module = "rensa")]
 pub struct RMinHashDeduplicator {
   threshold: f64,
   existing_signatures: FxHashMap<String, RMinHash>,
@@ -19,10 +17,7 @@ pub struct RMinHashDeduplicator {
   id_to_key: FxHashMap<usize, String>,
 }
 
-#[pymethods]
 impl RMinHashDeduplicator {
-  #[new]
-  #[pyo3(signature = (threshold, num_perm, use_lsh, num_bands=None))]
   #[must_use]
   pub fn new(
     threshold: f64,
@@ -188,16 +183,13 @@ impl RMinHashDeduplicator {
 }
 
 /// `InlineDeduplicator` for `CMinHash`
-#[pyclass(module = "rensa")]
 pub struct CMinHashDeduplicator {
   threshold: f64,
   existing_signatures: FxHashMap<String, CMinHash>,
   signature_cache: FxHashMap<String, Vec<u64>>,
 }
 
-#[pymethods]
 impl CMinHashDeduplicator {
-  #[new]
   #[must_use]
   pub fn new(threshold: f64) -> Self {
     Self {
